@@ -1,0 +1,55 @@
+<div id="feedfinder">
+</div>
+<?php $t = "<xml version='1.0'><MyTasks><Search>Test</Search></MyTasks>";?>
+<?php $xml = "
+    <xml version='1.0'>
+    <tree>
+    <title>Feed Finder</title>
+    <description>Spillers Feed Finder Descion Tree</description>
+    <branch id='1'>
+        <content></content>
+        <fork target='1.1'>Yes</fork>
+        <fork target='1.2'>No</fork>
+    </branch>
+    <branch id='1.1'>
+        <content>Does your horse-pony maintain weight easily on forage alone?</content>
+        <fork target='1.1.1'>Yes</fork>
+        <fork target='1.1.2'>No</fork>
+    </branch>
+    <branch id='1.2'>
+        <content>Does Does your horse-pony maintain weight easily on forage alone?</content>
+        <fork target='1.2.1'>Yes</fork>
+        <fork target='1.2.2'>No</fork>
+    </branch>
+    <branch id='1.1.1'>
+        <content type='category'>cat1</content>
+    </branch>
+    <branch id='1.1.2'>
+        <content type='category'>cat2</content>
+    </branch>
+    <branch id='1.2.1'>
+        <content type='category'>cat1</content>
+    </branch>
+    <branch id='1.2.2'>
+        <content>Does your horse-pony maintain weight easily on forage alone?</content>
+        <fork target='1.1.1.1'>Yes</fork>
+        <fork target='1.1.1.2'>No</fork>
+    </branch>
+    <branch id='1.1.1.1'>
+        <content type='cmsPage'>contact-us</content>
+    </branch>
+    <branch id='1.1.1.2'>
+        <content type='cmsPage'>contact-us-as-well</content>
+    </branch>
+</tree>";
+?>
+<script type="text/x-magento-init">
+{ "#feedfinder": {
+    "Yoma_FeedFinder/js/feedfinder": {
+        "url":"http://www.example.url",
+        "method":"post",
+        "xml":"<?php echo $t; ?>"
+        }
+    }
+}
+</script>
