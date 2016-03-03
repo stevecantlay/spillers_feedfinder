@@ -1,6 +1,10 @@
 <div id="feedfinder">
+    <div id="question"></div>
+    <div id="buttons"></div>
+    <div id="history"></div>
 </div>
-<?php $t = "<xml version='1.0'><MyTasks><Search>Test</Search></MyTasks>";?>
+
+<?php $t = "<tree><branch id='1'><content>Question 1</content><fork target='1.1'>Yes</fork><fork target='1.2'>No</fork></branch></tree>";?>
 <?php $xml = "
     <xml version='1.0'>
     <tree>
@@ -43,12 +47,15 @@
     </branch>
 </tree>";
 ?>
+
+
 <script type="text/x-magento-init">
 { "#feedfinder": {
-    "Yoma_FeedFinder/js/feedfinder": {
-        "url":"http://www.example.url",
-        "method":"post",
-        "xml":"<?php echo $t; ?>"
+    "Yoma_FeedFinder/js/decisiontree": {
+        "xml":"<?php echo $t; ?>",
+        "question":"#question",
+        "buttons":"#buttons",
+        "history":"#history"
         }
     }
 }

@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
+    <menu>
+        <add id="Yoma_FeedFinder::decision_trees" title="Feed Finder" module="Yoma_FeedFinder" sortOrder="50" parent="Magento_Backend::content" resource="Yoma_FeedFinder::decision_trees" />
+        <add id="Yoma_FeedFinder::tree" title="Trees" module="Yoma_FeedFinder" sortOrder="0" parent="Yoma_FeedFinder::decision_trees" action="feedfinder/tree" resource="Yoma_FeedFinder::tree"/>
+    </menu>
+</config>
