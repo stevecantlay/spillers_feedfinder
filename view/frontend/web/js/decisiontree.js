@@ -8,79 +8,182 @@ define([
 
     $.widget('decisiontree.js', {
         options: {
-            buttonTemplate:
-            '<span class="response" id="<%- data.value %>">' +
+            answerTemplate: '<dd class="<%- data.class %>" id="<%- data.target %>">' +
             '<%- data.title %>' +
-            '</span>'
+            '</dd>',
+            buttonTemplate: '<div id="<%- data.bid %>" class="<%- data.class %>" data-pointer="<%- data.pointer %>">' +
+            '<%- data.title %>' +
+            '</div>',
+            start: 1
         },
-        _create: function() {
+        _create: function () {
+
             this.options.xml = this._convertXml(this.options.xml);
-            this.questionContainer  = this.element.find(this.options.question);
-            this.buttonsContainer  = this.element.find(this.options.buttons);
-            this.historyContainer  = this.element.find(this.options.history);
+            this.options.contentCss = "content";
+            this.options.buttonsCss = "buttons";
+            this.options.buttonsActive = "active";
+            this.options.buttonsInActive = "in-active";
+            this.options.historyCss = "history";
+            this.options.backText = "previous question";
+            this.options.nextText = "next question";
+            this.options.backButton = "ffbackbutton";
+            this.options.nextButton = "ffnextbutton";
+
+            this.answerTmpl = mageTemplate(this.options.answerTemplate);
             this.buttonTmpl = mageTemplate(this.options.buttonTemplate);
         },
-        _init: function() {
+        _init: function () {
 
-            this.current = 1;
-            this.currentNode = this._getCurrent();
-            if(this.currentNode.length > 0){
-                this.currentNode.children().each($.proxy(function(key,node){
-                    switch (node.tagName) {
-                        case 'content':
-                            console.log(node.tagName);
-                            console.log(node.textContent);
-                            this._renderQuestion(this.questionContainer,this.current,node.textContent);
-                            break;
-                        case 'fork':
-                            var target = $(node).attr('target');
-                            this._renderQuestion(this.buttonsContainer,target,node.textContent);
-                            break;
-                    }
-                }, this));
+            if(this.options.xml) {
+                this.currentNodeId = this.options.start;
+                this.nextNode = null;
+                this.previousNode = null;
+                this.currentAnswer = null;
+                this.history = [];
+                this.current = 1;
+                this._setupStructure();
+                this.currentNode = this._getCurrentNode(this.currentNodeId);
+                this._renderCurrentNode();
             }
         },
-        _convertXml: function(xml){
+        _setupStructure: function () {
+
+            this.content = document.createElement( "div" );
+            this.question = document.createElement( "dt" );
+            this.questions = document.createElement( "dl" );
+            this.buttons = document.createElement( "div" );
+            this.history = document.createElement( "ul" );
+
+            $(this.content).attr("id", "content").addClass(this.options.contentCss);
+            $(this.questions).attr("id", "questions");
+            $(this.buttons).attr("id", "buttons").addClass(this.options.buttonsCss);
+            $(this.history).attr("id", "history").addClass(this.options.historyCss).hide();
+
+            $(this.questions).append(this.question);
+            $(this.content).append(this.questions);
+            $(this.content).append(this.history);
+            this.element.append(this.content);
+            this.element.append(this.buttons);
+
+        },
+        _convertXml: function (xml) {
+
             try {
                 var xmlDoc = $.parseXML(xml);
                 return $(xmlDoc);
             } catch (err) {
-                console.log(err);
+                return false;
             }
-            return xmlDoc;
-        },
-        _setOption: function( key, value ) {
-            if ( key === "xml" ) {
-                value = this._convertXml( value );
+        }, 
+        _getCurrentNode: function(id){ 
+
+            var xmlDoc = this.options.xml; 
+            var node = xmlDoc.find("branch[id=" + id + "]"); 
+            if(node.length){
+                return node;
             }
-            this._super( key, value );
+            return false; 
         },
-        _setOptions: function( options ) {
-            this._super( options );
+        _renderCurrentNode: function(){
+            var node = this._getCurrentNode(this.currentNodeId);
+            this._renderQuestion(node);
+            this._renderAnswers(node);
+            this._renderButtons();
         },
-        _getCurrent: function(){
-            var xmlDoc = this.options.xml;
-            var node = xmlDoc.find("branch[id=" + this.current + "]");
-            return node;
+        _renderQuestion: function(node){
+
+            var question = this._getQuestion(node);
+            $(this.question).text(question);
+
         },
-        _setCurrent: function(current){
-            this.current = current;
+        _getQuestion: function(node){
+
+            return this._sanitizeText(node.find("content").text());
         },
-        _renderQuestion: function(feedElement, tagName, textContent){
+        _renderAnswers: function(node){
 
-            console.log(tagName);
-            console.log(textContent);
+            node.find("fork").each($.proxy(function(key,child){
 
-            feedElement.append($.proxy(function () {
+                $(this.questions).append($.proxy(function(){
+                    var tmplData,  tmpl;
 
-                var text = textContent.replace(/[!"#$%&'()*+,.\/:;<=>?@[\\\]^`{|}~]/g, '\\$&'),
-                    tmplData,
-                    tmpl;
+                    tmplData = {
+                        class:$(child).attr('class'),
+                        target:$(child).attr('target'),
+                        title:$(child).text()
+                    };
 
+                    tmpl = this.answerTmpl ({ 
+                        data: tmplData 
+                    });  
+
+                    return $(tmpl);
+
+                },this));
+
+                $(this.questions).find('dd').click($.proxy(this._answerEvent, this));
+            }, this)); 
+        },
+        _renderButtons: function(){
+
+            if(this.history.length){
+                var node = this.history.slice(-1)[0];
+                var pointer = $(node).attr('id');
+                this._renderButton(this.options.backText,pointer,this.options.backButton);
+            }
+            this._renderButton(this.options.nextText,0,this.options.nextButton);
+            $(this.buttons).find('div').click($.proxy(this._buttonEvent, this));
+        },
+        _answerEvent: function(event) {
+
+            event.stopPropagation();
+            this._clearActive();
+            var e = $(event.target);
+            var target = $(e).attr('id');
+            $(e).addClass('active');
+            this._setButtonTarget(this.options.nextButton,target);
+        },
+        _buttonEvent: function(event) {
+            event.stopPropagation();
+            console.log($(event.target));
+        },
+        _setButtonTarget: function(b,target){
+
+            var button = $(this.buttons).find("#" + b).attr("data-pointer",target);
+            this._toggleButton(button);
+        },
+        _toggleButton: function(button){
+            if($(button).hasClass(this.options.buttonsInActive)){
+                $(button).removeClass(this.options.buttonsInActive);
+                $(button).addClass(this.options.buttonsActive);
+            }
+        },
+        _sanitizeText: function(text){
+            return text.replace(/[!"#$%&'()*+,.\/:;<=>?@[\\\]^`{|}~]/g, '\\$&');
+        },
+        _clearActive:function(){
+            $(this.questions).find('dd').removeClass('active');
+        },
+        _renderButton: function(text,pointer,id){
+
+            var t = text;
+            var p = pointer;
+            var bid = id;
+
+            $(this.buttons).append($.proxy(function(){
+
+                var tmplData,  tmpl;
+                var state = this.options.buttonsActive;
+                if(pointer < 1){
+                    state = this.options.buttonsInActive;
+                }
                 tmplData = {
-                    value: tagName,
-                    title: text
+                    bid:bid,
+                    class:state,
+                    pointer:p,
+                    title:t
                 };
+
                 tmpl = this.buttonTmpl ({
                     data: tmplData
                 });
@@ -89,18 +192,7 @@ define([
 
             },this));
 
-            this.element.find('.response').click($.proxy(this._answerEvent, this));
-
-        },
-        _answerEvent: function(event) {
-            event.stopPropagation();
-            console.log(event.target);
-            alert('you clicked ' + $(event.target).attr('id'));
-            var current = $(event.target).attr('id');
-            this._setCurrent(current);
-        },
-        _clearData: function(){
-
+            $(this.buttons).children().addClass(this.options.buttonsCss);
         }
 
     });
