@@ -75,14 +75,17 @@ define([
                 return false;
             }
         }, 
-        _getCurrentNode: function(id){ 
-
-            var xmlDoc = this.options.xml; 
-            var node = xmlDoc.find("branch[id=" + id + "]"); 
+        _getNode: function(id){
+            var xmlDoc = this.options.xml;
+            var node = xmlDoc.find("branch[id=" + id + "]");
             if(node.length){
                 return node;
             }
-            return false; 
+            return false;
+        },
+        _getCurrentNode: function(id){ 
+
+            return this._getNode(id);
         },
         _renderCurrentNode: function(){
             var node = this._getCurrentNode(this.currentNodeId);
@@ -144,8 +147,9 @@ define([
             this._setButtonTarget(this.options.nextButton,target);
         },
         _buttonEvent: function(event) {
+
             event.stopPropagation();
-            console.log($(event.target));
+            this._processSelected($(event.target));
         },
         _setButtonTarget: function(b,target){
 
@@ -153,6 +157,7 @@ define([
             this._toggleButton(button);
         },
         _toggleButton: function(button){
+
             if($(button).hasClass(this.options.buttonsInActive)){
                 $(button).removeClass(this.options.buttonsInActive);
                 $(button).addClass(this.options.buttonsActive);
@@ -193,6 +198,32 @@ define([
             },this));
 
             $(this.buttons).children().addClass(this.options.buttonsCss);
+        },
+        _processSelected: function(target){
+            var type = target.attr('id');
+            var pointer = target.attr('data-pointer');
+
+            if(pointer > 0) {
+                console.log(pointer);
+                var nextNode = this._getNode(pointer);
+                if (type == this.options.nextButton) {
+                    this.history.push([this.currentNodeId,pointer]);
+
+                } else if (type == this.options.backButton) {
+
+                }
+
+                return true;
+            }
+
+
+
+                // pop history set current then render current
+            //if next
+                //push to history
+                //then check if end
+                    //if end reder outcome
+                    // else render node
         }
 
     });
