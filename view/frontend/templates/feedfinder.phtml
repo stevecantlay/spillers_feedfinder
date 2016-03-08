@@ -1,7 +1,11 @@
 <span>here</span>
 <div id="feedfinder"></div>
 
-<?php $t = "<tree><branch id='1'><content>Question 1</content><fork target='1.1' class='answer'>Yes</fork><fork target='1.2' class='answer'>No</fork></branch></tree>";?>
+<?php $t = "<tree>" .
+                "<branch id='1'><content>Question 1</content><fork target='1.1' class='answer'>Yes</fork><fork target='1.2' class='answer'>No</fork></branch>" .
+                "<branch id='1.1'><content>Question 1.1</content><fork target='1.1.1' class='answer'>Yes 1.1</fork><fork target='1.1.2' class='answer'>No 1.2</fork></branch>" .
+                "<branch id='1.2'><content>Question 1.2</content><fork target='1.2.1' class='answer'>Yes 2.1</fork><fork target='1.2.2' class='answer'>No 2.2</fork></branch>" .
+            "</tree>";?>
 <?php $xml = "
     <xml version='1.0'>
     <tree>
