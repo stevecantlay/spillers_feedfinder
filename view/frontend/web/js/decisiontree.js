@@ -44,7 +44,7 @@ define([
                 this.nextNode = null;
                 this.previousNode = null;
                 this.currentAnswer = null;
-                this.qHistory = new Array();
+                this.qHistory = [];
                 this.current = 1;
                 this._setupStructure();
                 this.currentNode = this._getCurrentNode(this.currentNodeId);
@@ -91,6 +91,7 @@ define([
             }
         }, 
         _getNode: function(id){
+
             var xmlDoc = this.options.xml;
             var node = $(xmlDoc).find("branch[id='" + id + "']");
             if(node.length){
@@ -99,37 +100,57 @@ define([
             return false;
         },
         _getCurrentNode: function(id){ 
+
             return this._getNode(id);
         },
         _emptyNode: function(node){
+
             $(node).empty();
         },
         _renderHistory: function(){
+
             this._emptyNode(this.history);
-            $(this.qHistory).each($.proxy(function(child){
-                var node = this._getNode(child.node);
-                var question = this._getQuestion(node);
-                $(this.history).append('<li>' + question + '</li>');
-            },this));
+            if(this.qHistory.length) {
+                $(this.qHistory).each($.proxy(function (key, child) {
+                    var node = this._getNode(child.node);
+                    var question = this._getQuestion(node);
+                    $(this.history).append('<li>' + question + '</li>');
+                }, this));
+                $(this.history).show();
+            }
         },
         _renderCurrentNode: function(){
+
             var node = this._getCurrentNode(this.currentNodeId);
+
+            var nodeType = this._getNodeType(node);
+            console.log(nodeType);
             this._emptyNode(this.questions);
             this._renderQuestion(node);
             this._renderAnswers(node);
             this._renderButtons();
             this._renderHistory();
-            this.currentHistory = false;
         },
         _renderQuestion: function(node){
 
             var question = this._getQuestion(node);
             $(this.question).text(question);
-
         },
         _getQuestion: function(node){
 
-            return this._sanitizeText($(node).find("content").text());
+            return this._sanitizeText(this._getContentText(node));
+        },
+        _getContentText: function(node){
+            return $(node).find("content").text();
+        },
+        _getNodeType: function(node){
+            return this._getNodeAttr(node,'nodeType');
+        },
+        _getContentType: function(node){
+            return this._getNodeAttr(node,'contentType');
+        },
+        _getNodeAttr: function(node,attr){
+            return $(node).find("content").attr(attr);
         },
         _renderAnswers: function(node){
 
@@ -155,9 +176,14 @@ define([
             }, this));
 
             this.element.find('dd').click($.proxy(this._answerOnClick, this));
+            if(this.qHistory.length) {
+                var currentHistory = this.qHistory.slice(-1)[0];
+                var pointer = currentHistory.answer;
+                $(this.question).find("#" + pointer).addClass('active');
+            }
         },
         _answerOnClick: function(event) {
-            console.log(event);
+
             event.stopPropagation();
             this._clearActive();
             var e = $(event.target);
@@ -167,10 +193,9 @@ define([
         },
         _renderButtons: function(){
 
-            if(this.currentHistory){
-                console.log(this.currentHistory);
-
-                var pointer = this.currentHistory.node;
+            if(this.qHistory.length){
+                var currentHistory = this.qHistory.slice(-1)[0]
+                var pointer = currentHistory.node;
                 this._renderButton(pointer,this.options.backButton);
 
             }else{
@@ -185,35 +210,27 @@ define([
             this.element.find("#" + id).show().attr('data-pointer',pointer);
         },
         _gotoNextOnClick: function(event) {
+
             event.stopPropagation();
-            var et = $(e);
+            var e = $(event.target);
 
-            if (et.is("span")) {
-                et  = et.parent();
+            if($(e).is("span")){
+                e = e.parent();
             }
-            console.log(et);
-            var type = $(et).attr('id');
-            var pointer = $(et).attr('data-pointer');
-            console.log(type);
-            console.log(pointer);
-            console.log(parseFloat(pointer));
-            console.log(parseFloat(pointer) > 0);
-            console.log(type == this.options.nextButton);
 
-            /*
-            if(parseFloat(pointer) > 0) {
-                var nextNode = this._getNode(pointer);
+            var type = $(e).attr('id');
+            var pointer = $(e).attr('data-pointer');
+
+            if(parseFloat(pointer) !== 0){
                 if (type == this.options.nextButton) {
-                    var history = new Array();
-                    history['node'] = this.currentNodeId;
-                    history['answer'] = pointer;
+                    var history = {node: this.currentNodeId,answer:pointer};
                     this.qHistory.push(history);
-                }else if (type == this.options.backButton) {
+                }else if (type == this.options.backButton){
                     this.currentHistory = this.qHistory.pop();
                 }
                 this.currentNodeId = pointer;
                 this._renderCurrentNode();
-            }*/
+            }
         },
         _setButtonTarget: function(b,target){
 
@@ -228,10 +245,15 @@ define([
             }
         },
         _sanitizeText: function(text){
+
             return text.replace(/[!"#$%&'()*+,.\/:;<=>?@[\\\]^`{|}~]/g, '\\$&');
         },
         _clearActive:function(){
+
             $(this.questions).find('dd').removeClass('active');
+        },
+        _getAjaxContent: function(type,name){
+
         }
     });
 
