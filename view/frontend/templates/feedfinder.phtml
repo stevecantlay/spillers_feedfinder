@@ -2,62 +2,24 @@
 <div id="feedfinder"></div>
 
 <?php $t = "<tree>" .
-                "<branch id='1'><content nodeType='branch' contentType='q'>Question 1</content><fork target='1.1' class='answer'>Yes</fork><fork target='1.2' class='answer'>No</fork></branch>" .
-                "<branch id='1.1'><content nodeType='branch' contentType='q'>Question 1.1</content><fork target='1.1.1' class='answer'>Yes 1.1</fork><fork target='1.1.2' class='answer'>No 1.2</fork></branch>" .
-                "<branch id='1.2'><content nodeType='branch' contentType='q'>Question 1.2</content><fork target='1.2.1' class='answer'>Yes 2.1</fork><fork target='1.2.2' class='answer'>No 2.2</fork></branch>" .
-                "<branch id='1.2.1'><content nodeType='leaf' contentType='category'>Question 1.2.1</content></branch>" .
-                "<branch id='1.2.2'><content nodeType='leaf' contentType='block'>Question 1.2.1</content></branch>" .
-
-    "</tree>";?>
-<?php $xml = "
-    <xml version='1.0'>
-    <tree>
-    <title>Feed Finder</title>
-    <description>Spillers Feed Finder Descion Tree</description>
-    <branch id='1'>
-        <content></content>
-        <fork target='1.1'>Yes</fork>
-        <fork target='1.2'>No</fork>
-    </branch>
-    <branch id='1.1'>
-        <content>Does your horse-pony maintain weight easily on forage alone?</content>
-        <fork target='1.1.1'>Yes</fork>
-        <fork target='1.1.2'>No</fork>
-    </branch>
-    <branch id='1.2'>
-        <content>Does Does your horse-pony maintain weight easily on forage alone?</content>
-        <fork target='1.2.1'>Yes</fork>
-        <fork target='1.2.2'>No</fork>
-    </branch>
-    <branch id='1.1.1'>
-        <content type='category'>cat1</content>
-    </branch>
-    <branch id='1.1.2'>
-        <content type='category'>cat2</content>
-    </branch>
-    <branch id='1.2.1'>
-        <content type='category'>cat1</content>
-    </branch>
-    <branch id='1.2.2'>
-        <content>Does your horse-pony maintain weight easily on forage alone?</content>
-        <fork target='1.1.1.1'>Yes</fork>
-        <fork target='1.1.1.2'>No</fork>
-    </branch>
-    <branch id='1.1.1.1'>
-        <content type='cmsPage'>contact-us</content>
-    </branch>
-    <branch id='1.1.1.2'>
-        <content type='cmsPage'>contact-us-as-well</content>
-    </branch>
-</tree>";
-?>
-
+                "<branch id='1'><content nodeType='branch' contentType='q'>Question 1</content>" .
+                    "<fork target='1.1' class='answer'>Yes</fork>" .
+                    "<fork target='1.2' class='answer'>No</fork></branch>" .
+                "<branch id='1.1'><content nodeType='branch' contentType='q'>Question 1.1</content>" .
+                    "<fork target='1.1.1' class='answer'>Yes 1.1</fork>" .
+                    "<fork target='1.1.2' class='answer'>No 1.2</fork></branch>" .
+                "<branch id='1.2'><content nodeType='branch' contentType='q'>Question 1.2</content>" .
+                    "<fork target='1.2.1' class='answer'>Yes 2.1</fork>" .
+                    "<fork target='1.2.2' class='answer'>No 2.2</fork></branch>" .
+                "<branch id='1.2.1'><content nodeType='leaf' contentType='category'>feedone</content></branch>" .
+                "<branch id='1.2.2'><content nodeType='leaf' contentType='block'>Question 1.2.2</content></branch>" .
+            "</tree>";?>
 
 <script type="text/x-magento-init">
 { "#feedfinder": {
     "Yoma_FeedFinder/js/decisiontree": {
         "xml":"<?php echo $t; ?>",
-        "url":"<?php echo $block->getUrl('feedfinder/index/fetch') ?>"
+        "url":"<?php echo rtrim($block->getUrl('feedfinder/index/fetch'),'/'); ?>"
         }
     }
 }

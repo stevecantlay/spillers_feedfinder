@@ -12,12 +12,24 @@ define([
             '<%- data.title %>' +
             '</dd>',
             mainTemplate: '<div id="content" class="<%- data.cclass %>">' +
-            '<dl id="questions"><dt id="question"></dt></dl>' +
-            '<div id="buttons" class="<%- data.bclass %>">' +
-            '<button id="<%- data.bbutton %>" class="in-active <%- data.bbclass %>" data-pointer="0"><span><%- data.bcontent %></span></button>' +
-            '<button id="<%- data.nbutton %>" class="in-active <%- data.bbclass %>" data-pointer="0"><span><%- data.ncontent %></span></button>' +
-            '</div></div>' +
-            '<ul id="history" class="<%- data.hclass %>" style="display: none;"></ul>',
+                '<dl id="questions"><dt id="question"></dt></dl>' +
+                '<div id="buttons" class="<%- data.bclass %>">' +
+                    '<button id="<%- data.bbutton %>" class="in-active <%- data.bbclass %>" data-pointer="0"><span><%- data.bcontent %></span></button>' +
+                    '<button id="<%- data.nbutton %>" class="in-active <%- data.bbclass %>" data-pointer="0"><span><%- data.ncontent %></span></button>' +
+                '</div>' +
+            '</div>' +
+            '<div><ul id="history" class="<%- data.hclass %>" style="display: none;"></ul></div>' +
+            '<div id="result">' +
+                '<div id="results">' +
+                    '<ul></ul>' +
+                '</div>' +
+                '<div id="blurbs"></div>' +
+            '</div>',
+            productTemplate: '<ul><li class="product-feed-image">' + '<%- data.image %>' +
+                '</li>' +
+                '<li class="product-feed-image"><%- data.name %></li>' +
+                '<li class="product-feed-image"><%- data.description %></li>' +
+                '<li class="product-feed-url"><%- data.url %></li></ul>',
             start: 1
         },
         _create: function () {
@@ -35,6 +47,7 @@ define([
 
             this.answerTmpl = mageTemplate(this.options.answerTemplate);
             this.mainTmpl = mageTemplate(this.options.mainTemplate);
+            this.productTmpl = mageTemplate(this.options.productTemplate);
         },
         _init: function() {
 
@@ -80,6 +93,62 @@ define([
             this.questions = this.element.find('#questions');
             this.buttons = this.element.find('#buttons');
             this.history = this.element.find('#history');
+            this.result = this.element.find('#result');
+        },
+        _fetch: function(param){
+
+            var postData = {
+                "category": param
+            };
+            $.ajax({
+                context: this,
+                type: "post",
+                url: this.options.url,
+                dataType: "json",
+                data: postData,
+                success: this._setResult,
+                error: this.exeError,
+                complete: this.exeComplete
+            });
+        },
+        _setResult: function(data){
+
+            $(this.content).hide();
+            this._emptyNode(this.results, 'ul');
+            $(data).each($.proxy(function (key, product) {
+
+                $(this.result).find('#results').append($.proxy(function(){
+                    var tmplData,  tmpl;
+                    console.log(product);
+                    tmplData = {
+                        image:product.image,
+                        name:product.name,
+                        description:product.description,
+                        url:product.url
+                    };
+
+                    tmpl = this.productTmpl ({
+                        data: tmplData
+                    });
+
+                    return $(tmpl);
+
+                },this));
+
+            }, this));
+        },
+        _exeError: function(){
+
+        },
+        _exeComplete: function(){
+
+        },
+        refresh: function() {
+
+            this.currentNodeId = 1;
+            this.currentHistory = false;
+            this.qHistory = [];
+            this._renderCurrentNode();
         },
         _convertXml: function (xml) {
 
@@ -94,6 +163,7 @@ define([
 
             var xmlDoc = this.options.xml;
             var node = $(xmlDoc).find("branch[id='" + id + "']");
+            console.log(node);
             if(node.length){
                 return node;
             }
@@ -103,13 +173,16 @@ define([
 
             return this._getNode(id);
         },
-        _emptyNode: function(node){
-
-            $(node).empty();
+        _emptyNode: function(node,el){
+            if(el){
+                $(node).find(el).remove();
+            }else {
+                $(node).empty();
+            }
         },
         _renderHistory: function(){
 
-            this._emptyNode(this.history);
+            this._emptyNode(this.history,false);
             if(this.qHistory.length) {
                 $(this.qHistory).each($.proxy(function (key, child) {
                     var node = this._getNode(child.node);
@@ -125,22 +198,33 @@ define([
 
             var nodeType = this._getNodeType(node);
             console.log(nodeType);
-            this._emptyNode(this.questions);
-            this._renderQuestion(node);
-            this._renderAnswers(node);
-            this._renderButtons();
-            this._renderHistory();
+            if(nodeType == 'leaf'){
+                var contentType = this._getContentType(node);
+                console.log(contentType);
+                var contentValue = this._getContentText(node);
+                console.log(contentValue);
+                if(contentType == 'category'){
+                    this._fetch(contentValue);
+                }
+            }else {
+                this._emptyNode(this.questions, 'dd');
+                this._renderQuestion(node);
+                this._renderAnswers(node);
+                this._renderButtons();
+                this._renderHistory();
+            }
         },
         _renderQuestion: function(node){
 
             var question = this._getQuestion(node);
-            $(this.question).text(question);
+            $(this.question).html(question);
         },
         _getQuestion: function(node){
-
-            return this._sanitizeText(this._getContentText(node));
+            return this._getContentText(node);
+            //return this._sanitizeText(this._getContentText(node));
         },
         _getContentText: function(node){
+
             return $(node).find("content").text();
         },
         _getNodeType: function(node){
@@ -190,6 +274,7 @@ define([
             var target = $(e).attr('id');
             $(e).addClass('active');
             this._setButtonTarget(this.options.nextButton,target);
+            return false;
         },
         _renderButtons: function(){
 
@@ -202,8 +287,8 @@ define([
                 this.element.find("#" + this.options.backButton).hide();
             }
             this._renderButton(0,this.options.nextButton);
-            this.element.find("#" + this.options.backButton).click($.proxy(this._gotoNextOnClick, this));
-            this.element.find("#" + this.options.nextButton).click($.proxy(this._gotoNextOnClick, this));
+            this.element.find("#" + this.options.backButton).find('span').click($.proxy(this._gotoNextOnClick, this));
+            this.element.find("#" + this.options.nextButton).find('span').click($.proxy(this._gotoNextOnClick, this));
         },
         _renderButton: function(pointer,id){
 
@@ -221,16 +306,30 @@ define([
             var type = $(e).attr('id');
             var pointer = $(e).attr('data-pointer');
 
-            if(parseFloat(pointer) !== 0){
-                if (type == this.options.nextButton) {
-                    var history = {node: this.currentNodeId,answer:pointer};
-                    this.qHistory.push(history);
-                }else if (type == this.options.backButton){
-                    this.currentHistory = this.qHistory.pop();
+            if(pointer == 0){
+                return false;
+            }
+
+            var nextNode = this._getNode(pointer);
+
+            if(nextNode){
+                if(parseFloat(pointer) !== 0) {
+                    if (type == this.options.nextButton) {
+                        var history = {node: this.currentNodeId, answer: pointer};
+                        this.qHistory.push(history);
+                    } else if (type == this.options.backButton) {
+                        this.currentHistory = this.qHistory.pop();
+                    }
+                    this.currentNodeId = pointer;
+                    this._renderCurrentNode();
                 }
-                this.currentNodeId = pointer;
+            }else{
+                this.currentNodeId = 1;
+                this.currentHistory = false;
+                this.qHistory = [];
                 this._renderCurrentNode();
             }
+            return false;
         },
         _setButtonTarget: function(b,target){
 
@@ -252,9 +351,7 @@ define([
 
             $(this.questions).find('dd').removeClass('active');
         },
-        _getAjaxContent: function(type,name){
 
-        }
     });
 
     return $.decisiontree.js;
