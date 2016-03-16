@@ -54,6 +54,13 @@ class Tree extends \Magento\Framework\Model\ResourceModel\Db\AbstractDb
 
         $object->setUpdateTime($this->_date->gmtDate());
 
+        $XML = $object->getData('content');
+        if (strlen($XML) < 0 &&
+            @simplexml_load_string($XML, null, LIBXML_NOERROR) === false) {
+            throw new \Magento\Framework\Validator\Exception(__('Tree XML is not valid.'));
+        }
+
+
         return parent::_beforeSave($object);
     }
 

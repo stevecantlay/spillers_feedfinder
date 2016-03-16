@@ -7,6 +7,7 @@ use Magento\Backend\App\Action\Context;
 use Magento\Framework\Registry;
 use Magento\Framework\View\Result\PageFactory;
 use Yoma\FeedFinder\Model\TreeFactory;
+use Magento\Backend\Model\View\Result\ForwardFactory;
 
 abstract class Tree extends Action
 {
@@ -32,21 +33,30 @@ abstract class Tree extends Action
     protected $_treeFactory;
 
     /**
+     * @var \Magento\Backend\Model\View\Result\Forward
+     */
+    protected $resultForwardFactory;
+
+    /**
      * @param Context $context
      * @param Registry $coreRegistry
      * @param PageFactory $resultPageFactory
      * @param TreeFactory $treeFactory
+     * @param ForwardFactory $resultForwardFactory
      */
     public function __construct(
         Context $context,
         Registry $coreRegistry,
         PageFactory $resultPageFactory,
-        TreeFactory $treeFactory
+        TreeFactory $treeFactory,
+        ForwardFactory $resultForwardFactory
     ) {
         parent::__construct($context);
         $this->_coreRegistry = $coreRegistry;
         $this->_resultPageFactory = $resultPageFactory;
         $this->_treeFactory = $treeFactory;
+        $this->resultForwardFactory = $resultForwardFactory;
+
     }
 
     /**

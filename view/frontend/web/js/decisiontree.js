@@ -8,9 +8,7 @@ define([
 
     $.widget('decisiontree.js', {
         options: {
-            answerTemplate: '<dd class="<%- data.class %>" id="<%- data.target %>">' +
-            '<%- data.title %>' +
-            '</dd>',
+            answerTemplate: '<dd class="<%- data.class %>" id="<%- data.target %>"><%- data.title %></dd>',
             mainTemplate: '<div id="content" class="<%- data.cclass %>">' +
                 '<dl id="questions"><dt id="question"></dt></dl>' +
                 '<div id="buttons" class="<%- data.bclass %>">' +
@@ -30,6 +28,9 @@ define([
                 '<li class="product-feed-image"><%- data.name %></li>' +
                 '<li class="product-feed-image"><%- data.description %></li>' +
                 '<li class="product-feed-url"><%- data.url %></li></ul>',
+            contentTemplate: '<ul><li class="answer">' + '<%- data.content %>' +
+                '</li>' +
+                '</li></ul>',
             start: 1
         },
         _create: function () {
@@ -48,6 +49,7 @@ define([
             this.answerTmpl = mageTemplate(this.options.answerTemplate);
             this.mainTmpl = mageTemplate(this.options.mainTemplate);
             this.productTmpl = mageTemplate(this.options.productTemplate);
+            this.contentTmpl = mageTemplate(this.options.contentTemplate);
         },
         _init: function() {
 
@@ -114,12 +116,13 @@ define([
         _setResult: function(data){
 
             $(this.content).hide();
+
             this._emptyNode(this.results, 'ul');
             $(data).each($.proxy(function (key, product) {
 
-                $(this.result).find('#results').append($.proxy(function(){
+                var result = $(this.result).find('#results');
+                $(result).append($.proxy(function(){
                     var tmplData,  tmpl;
-                    console.log(product);
                     tmplData = {
                         image:product.image,
                         name:product.name,
@@ -143,12 +146,29 @@ define([
         _exeComplete: function(){
 
         },
-        refresh: function() {
+        _renderContent: function(content){
 
-            this.currentNodeId = 1;
-            this.currentHistory = false;
-            this.qHistory = [];
-            this._renderCurrentNode();
+            var value = content;
+
+            $(this.content).hide();
+            var result = $(this.result);
+            this._emptyNode(this.results, 'ul');
+            $(this.results).find('ul').remove()
+
+            result.find('#results').append($.proxy(function(){
+                var tmplData,  tmpl;
+                tmplData = {
+                    content:value,
+                };
+
+                tmpl = this.contentTmpl ({
+                    data: tmplData
+                });
+
+                return $(tmpl);
+
+            },this));
+            return false;
         },
         _convertXml: function (xml) {
 
@@ -197,21 +217,22 @@ define([
             var node = this._getCurrentNode(this.currentNodeId);
 
             var nodeType = this._getNodeType(node);
-            console.log(nodeType);
             if(nodeType == 'leaf'){
                 var contentType = this._getContentType(node);
-                console.log(contentType);
                 var contentValue = this._getContentText(node);
-                console.log(contentValue);
                 if(contentType == 'category'){
                     this._fetch(contentValue);
+                }else{
+                    this._renderContent(contentValue);
                 }
+                return false;
             }else {
                 this._emptyNode(this.questions, 'dd');
                 this._renderQuestion(node);
                 this._renderAnswers(node);
                 this._renderButtons();
                 this._renderHistory();
+                return false;
             }
         },
         _renderQuestion: function(node){
@@ -276,6 +297,43 @@ define([
             this._setButtonTarget(this.options.nextButton,target);
             return false;
         },
+        _gotoNextOnClick: function(event) {
+
+            event.stopPropagation();
+            if(event) {
+                var p = $(event.target);
+                if ($(p).is("span")) {
+                    var e = $(p).parent();
+                }
+                var type = $(e).attr('id');
+                var pointer = $(e).attr('data-pointer');
+
+                if (pointer == 0) {
+                    return false;
+                }
+                //console.log(pointer);
+                var nextNode = this._getNode(pointer);
+
+                if (nextNode) {
+                    if (parseFloat(pointer) !== 0) {
+                        if (type == this.options.nextButton) {
+                            var history = {node: this.currentNodeId, answer: pointer};
+                            this.qHistory.push(history);
+                        } else if (type == this.options.backButton) {
+                            this.currentHistory = this.qHistory.pop();
+                        }
+                        this.currentNodeId = pointer;
+                        this._renderCurrentNode();
+                    }
+                } else {
+                    this.currentNodeId = 1;
+                    this.currentHistory = false;
+                    this.qHistory = [];
+                    this._renderCurrentNode();
+                }
+            }
+            return false;
+        },
         _renderButtons: function(){
 
             if(this.qHistory.length){
@@ -287,49 +345,12 @@ define([
                 this.element.find("#" + this.options.backButton).hide();
             }
             this._renderButton(0,this.options.nextButton);
-            this.element.find("#" + this.options.backButton).find('span').click($.proxy(this._gotoNextOnClick, this));
-            this.element.find("#" + this.options.nextButton).find('span').click($.proxy(this._gotoNextOnClick, this));
+            this.element.find("#" + this.options.backButton).find('span').on( "click",$.proxy(this._gotoNextOnClick, this));
+            this.element.find("#" + this.options.nextButton).find('span').on( "click",$.proxy(this._gotoNextOnClick, this));
         },
         _renderButton: function(pointer,id){
 
             this.element.find("#" + id).show().attr('data-pointer',pointer);
-        },
-        _gotoNextOnClick: function(event) {
-
-            event.stopPropagation();
-            var e = $(event.target);
-
-            if($(e).is("span")){
-                e = e.parent();
-            }
-
-            var type = $(e).attr('id');
-            var pointer = $(e).attr('data-pointer');
-
-            if(pointer == 0){
-                return false;
-            }
-
-            var nextNode = this._getNode(pointer);
-
-            if(nextNode){
-                if(parseFloat(pointer) !== 0) {
-                    if (type == this.options.nextButton) {
-                        var history = {node: this.currentNodeId, answer: pointer};
-                        this.qHistory.push(history);
-                    } else if (type == this.options.backButton) {
-                        this.currentHistory = this.qHistory.pop();
-                    }
-                    this.currentNodeId = pointer;
-                    this._renderCurrentNode();
-                }
-            }else{
-                this.currentNodeId = 1;
-                this.currentHistory = false;
-                this.qHistory = [];
-                this._renderCurrentNode();
-            }
-            return false;
         },
         _setButtonTarget: function(b,target){
 
@@ -350,8 +371,7 @@ define([
         _clearActive:function(){
 
             $(this.questions).find('dd').removeClass('active');
-        },
-
+        }
     });
 
     return $.decisiontree.js;

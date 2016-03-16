@@ -18,7 +18,7 @@ class Index extends Tree
 
         /** @var \Magento\Backend\Model\View\Result\Page $resultPage */
         $resultPage = $this->_resultPageFactory->create();
-        $resultPage->setActiveMenu('Tutorial_SimpleNews::main_menu');
+        $resultPage->setActiveMenu('this.results');
         $resultPage->getConfig()->getTitle()->prepend(__('Tree'));
 
         return $resultPage;
