@@ -109,20 +109,22 @@ define([
                 dataType: "json",
                 data: postData,
                 success: this._setResult,
-                error: this.exeError,
-                complete: this.exeComplete
+                error: this._exeError,
+                complete: this._exeComplete
             });
         },
         _setResult: function(data){
 
-            $(this.content).hide();
+            this.element.find('#content').hide();
+            var result = this.element.find('#result');
+            this.element.find('#result').find('ul').remove();
 
-            this._emptyNode(this.results, 'ul');
             $(data).each($.proxy(function (key, product) {
 
-                var result = $(this.result).find('#results');
-                $(result).append($.proxy(function(){
-                    var tmplData,  tmpl;
+                this.element.find('#result').find('#results').append($.proxy(function(){
+                    var tmplData;
+                    var tmpl;
+
                     tmplData = {
                         image:product.image,
                         name:product.name,
@@ -141,21 +143,20 @@ define([
             }, this));
         },
         _exeError: function(){
-
+            return false;
         },
         _exeComplete: function(){
-
+            return false;
         },
         _renderContent: function(content){
 
             var value = content;
 
-            $(this.content).hide();
-            var result = $(this.result);
-            this._emptyNode(this.results, 'ul');
-            $(this.results).find('ul').remove()
+            this.element.find('#content').hide();
+            //var result = this.element.find('#result');
+            this.element.find('#result').find('ul').remove()
 
-            result.find('#results').append($.proxy(function(){
+            this.element.find('#result').find('#results').append($.proxy(function(){
                 var tmplData,  tmpl;
                 tmplData = {
                     content:value,
@@ -168,7 +169,6 @@ define([
                 return $(tmpl);
 
             },this));
-            return false;
         },
         _convertXml: function (xml) {
 
@@ -222,12 +222,14 @@ define([
                 var contentValue = this._getContentText(node);
                 if(contentType == 'category'){
                     this._fetch(contentValue);
+                    return false;
                 }else{
                     this._renderContent(contentValue);
+                    return false;
                 }
-                return false;
+
             }else {
-                this._emptyNode(this.questions, 'dd');
+                this.element.find('#questions').find('dd').remove()
                 this._renderQuestion(node);
                 this._renderAnswers(node);
                 this._renderButtons();

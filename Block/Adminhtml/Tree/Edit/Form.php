@@ -50,7 +50,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
      */
     protected function _prepareForm()
     {
-        /** @var \Yoma\TreeFinder\Model\Tree $model */
+        /** @var \Yoma\FeedFinder\Model\Tree $model */
         $model = $this->_coreRegistry->registry('feedfinder_tree');
 
         /** @var \Magento\Framework\Data\Form $form */
@@ -65,7 +65,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
             ['legend' => __('General Information'), 'class' => 'fieldset-wide']
         );
 
-        if ($model->getPostId()) {
+        if ($model->getTreeId()) {
             $fieldset->addField('tree_id', 'hidden', ['name' => 'tree_id']);
         }
 

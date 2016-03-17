@@ -1,9 +1,29 @@
 <div id="feedfinder"></div>
+
+
+<?php $t = "<tree>" .
+    "<branch id='1'><content nodeType='branch' contentType='q'>Question 1</content>" .
+    "<fork target='1.1' class='answer'>Yes</fork>" .
+    "<fork target='1.2' class='answer'>No</fork></branch>" .
+    "<branch id='1.1'><content nodeType='branch' contentType='q'>Question 1.1</content>" .
+    "<fork target='1.1.1' class='answer'>Yes 1.1</fork>" .
+    "<fork target='1.1.2' class='answer'>No 1.2</fork></branch>" .
+    "<branch id='1.2'><content nodeType='branch' contentType='q'>Question 1.2</content>" .
+    "<fork target='1.2.1' class='answer'>Yes 2.1</fork>" .
+    "<fork target='1.2.2' class='answer'>No 2.2</fork></branch>" .
+    "<branch id='1.2.1'><content nodeType='leaf' contentType='category'>feedone</content></branch>" .
+    "<branch id='1.2.2'>" .
+    "<content nodeType='leaf' contentType='block'><![CDATA[Please cotact the SPILLERS® Care-Line so that one of our nutritionists can make a specific recommendation for your horse/pony]]></content>" .
+    "</branch>" .
+    "</tree>";?>
+
+<?php $t = $this->getDecisionTree() ?>
+<?php //$t = preg_replace('/\s+/', ' ', $t);?>
 <script type="text/x-magento-init">
 
 { "#feedfinder": {
     "Yoma_FeedFinder/js/decisiontree": {
-        "xml":"<?php echo $this->getDecisionTree() ?>",
+        "xml":"<?php echo $t ?>",
         "url":"<?php echo rtrim($block->getUrl('feedfinder/index/fetch'),'/'); ?>"
         }
     }

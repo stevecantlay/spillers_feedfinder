@@ -36,10 +36,10 @@ class FeedFinder extends \Magento\Framework\View\Element\Template
         if($tree->getId()){
             try{
                 $contentXML = simplexml_load_string($tree->getContent(), null, LIBXML_NOERROR);
+                return str_replace('> <','><',preg_replace('/\s+/', ' ', $tree->getContent()));
             }catch(Exception $e){
 
             }
-            return preg_replace('/\s+/', ' ', $tree->getContent());
         }
 
         return '';

@@ -17,7 +17,7 @@
                 </arguments>
                 <block class="Magento\Backend\Block\Widget\Grid\Massaction" name="yoma_feedfinder_tree.grid.massaction" as="grid.massaction">
                     <arguments>
-                        <argument name="massaction_id_field" xsi:type="string">horse_id</argument>
+                        <argument name="massaction_id_field" xsi:type="string">feed_id</argument>
                         <argument name="form_field_name" xsi:type="string">tree</argument>
                         <argument name="options" xsi:type="array">
                             <item name="delete" xsi:type="array">
