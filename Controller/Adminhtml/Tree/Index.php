@@ -7,7 +7,7 @@ use  Yoma\FeedFinder\Controller\Adminhtml\Tree;
 class Index extends Tree
 {
     /**
-     * @return void
+     * @return \Magento\Framework\Controller\ResultInterface
      */
     public function execute()
     {
